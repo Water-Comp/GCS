@@ -25,7 +25,7 @@ namespace GCS
             foreach (string atribut in columns) command += " " + atribut;
             CommandExecute();
         }
-        public void SendUpdate(string name, string atribut, List<float> times, List<string> values)
+        public void SendUpdate(string name, string atribut, List<string> times, List<string> values)
         {
             command = "SendUpdate " + name + " " + atribut;
             for(int i = 0; i < values.Count; i++)

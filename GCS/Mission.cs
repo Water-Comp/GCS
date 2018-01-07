@@ -60,7 +60,7 @@ namespace GCS
                         sql = "CREATE TABLE " + element + " (time real, value real)";
                         db.Query(sql);
                     }
-                    foreach(string atribut in Atributs) save(command.ReciveUpdate(name, 0), atribut);
+                    foreach(string atribut in Atributs) save(command.ReciveUpdate(name,atribut, 0), atribut);
                 }
                 return 0;
             }
@@ -77,9 +77,7 @@ namespace GCS
         }
         public void ReciveUpdate()
         {
-            string command = "ReciveUpdate " + name + " " + MissionTime.ToString();
-            string response = TCP.Connect("127.0.0.1", command, 3456);
-            save(response);
+            foreach (string atribut in Atributs) save(command.ReciveUpdate(name, atribut, 0), atribut);
         }
         bool DBExist(string Name)
         {
@@ -88,21 +86,34 @@ namespace GCS
         public bool SendUpdate()
         {
             int i = 0;
-            List<string> tmp = new List<string>();
+            List<string> times = new List<string>();
+            List<string> values = new List<string>();
             if (TXT.ReadOneLine(0, "data.txt") == "FileIsEmpty") return false;
             if (TXT.ReadOneLine(0, "data.txt") == "SomeExeption") return false;
             if (TXT.ReadOneLine(0, "picture.txt") == "FileIsEmpty") return false;
             if (TXT.ReadOneLine(0, "picture.txt") == "SomeExeption") return false;
             else
             {
-                while (TXT.ReadOneLine(i, "data.txt") != null)
+                foreach(string atribut in Atributs)
                 {
-                    tmp.Add(TXT.ReadOneLine(i, "data.txt"));
-                    i++;
+                    while (TXT.ReadOneLine(i, atribut + ".txt") != null)
+                    {
+                        times.Add(TXT.ReadOneLine(i, atribut + ".txt"));
+                        values.Add(TXT.ReadOneLine(i + 1, atribut + ".txt"));
+                        i += 2;
+                    }
+                    command.SendUpdate(name, atribut, times, values);
+                    TXT.clear();
                 }
-                string picture = TXT.ReadOneLine(0, "picture.txt");
-                command.SendUpdate(name, tmp, "123");
-                TXT.clear();
+                times.Clear();
+                values.Clear();
+                while (TXT.ReadOneLine(i, "picture.txt") != null)
+                {
+                    times.Add(TXT.ReadOneLine(i, "picture.txt"));
+                    values.Add(TXT.ReadOneLine(i + 1, "picture.txt"));
+                    i += 2;
+                }
+                command.SendUpdate(name, "picture", times, values);
                 return true;
             }
         }
@@ -112,10 +123,7 @@ namespace GCS
             TXT.Overwrite(respond, "picture.txt");
             return true;
         }
-        public bool CheckTopicality()
-        {
-            return true;
-        }
+
 
     }
 }
